@@ -1,6 +1,6 @@
-import bme280
 import time
 import paho.mqtt.client as mqtt
+from sensor import Sensor
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -16,27 +16,25 @@ pressure_topic = 'sensor/bme280_pressure'
 
 @app.route('/')
 def index():
-	return jsonify({})
+    return jsonify({})
 
 @app.route('/bme280')
 def bme280_action():
-	sensor = bme280.sensor()
-
-	return jsonify(sensor)
+    return jsonify(Sensor().state())
 
 @app.route('/bme280/publish')
 def bme280_publish_action():
-	sensor = bme280.sensor()
+    sensor = Sensor()
 
-	hass_mqtt = mqtt.Client(client_id)
-	hass_mqtt.username_pw_set(username, password)
-	hass_mqtt.connect(broker_host)
-	
-	hass_mqtt.publish(temperature_topic, sensor['data']['temperature'])
-	hass_mqtt.publish(humidity_topic, sensor['data']['humidity'])
-	hass_mqtt.publish(pressure_topic, sensor['data']['pressure'])
-	
-	return jsonify({})
+    hass_mqtt = mqtt.Client(client_id)
+    hass_mqtt.username_pw_set(username, password)
+    hass_mqtt.connect(broker_host)
+
+    hass_mqtt.publish(temperature_topic, sensor.temperature())
+    hass_mqtt.publish(humidity_topic, sensor.humidity())
+    hass_mqtt.publish(pressure_topic, sensor.pressure())
+
+    return jsonify({})
 
 
 if __name__ == '__main__':
