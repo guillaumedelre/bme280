@@ -111,6 +111,7 @@ All settings are driven by environment variables. Copy `.env.example` to `.env` 
 |----------|---------|-------------|
 | `BME280_I2C_BUS` | `1` | I²C bus number (`1` for Pi Rev 2+, `0` for Rev 1) |
 | `BME280_I2C_ADDRESS` | `0x77` | Sensor I²C address (`0x77` or `0x76` depending on SDO pin) |
+| `BME280_IIR_FILTER` | `0` | IIR filter coefficient: `0`=off, `1`=2×, `2`=4×, `3`=8×, `4`=16× (recommended: `2` for indoor use) |
 | `MQTT_BROKER_HOST` | `localhost` | IP or hostname of your MQTT broker |
 | `MQTT_USERNAME` | _(empty)_ | MQTT username (leave empty for anonymous) |
 | `MQTT_PASSWORD` | _(empty)_ | MQTT password |
@@ -123,6 +124,7 @@ All settings are driven by environment variables. Copy `.env.example` to `.env` 
 ```ini
 BME280_I2C_BUS=1
 BME280_I2C_ADDRESS=0x77
+BME280_IIR_FILTER=0
 
 MQTT_BROKER_HOST=192.168.1.10
 MQTT_USERNAME=homeassistant

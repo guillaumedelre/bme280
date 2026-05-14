@@ -7,6 +7,9 @@ import smbus2
 I2C_BUS = int(os.environ.get('BME280_I2C_BUS', '1'))
 DEVICE_ADDRESS = int(os.environ.get('BME280_I2C_ADDRESS', '0x77'), 16)
 
+# IIR filter coefficient: 0=off, 1=2, 2=4, 3=8, 4=16 (see datasheet table 28)
+IIR_FILTER = int(os.environ.get('BME280_IIR_FILTER', '0'))
+
 
 def _get_short(data: list[int], index: int) -> int:
     return c_short((data[index + 1] << 8) + data[index]).value
@@ -54,6 +57,7 @@ def read_all(addr: int = DEVICE_ADDRESS) -> tuple[float, float, float]:
         time.sleep(0.002)  # 2ms startup delay (datasheet section 4.2)
         _wait_nvm_copy(bus, addr)
 
+        bus.write_byte_data(addr, 0xF5, IIR_FILTER << 2)  # config: filter bits [4:2]
         bus.write_byte_data(addr, 0xF2, OVERSAMPLE_HUM)
         bus.write_byte_data(addr, 0xF4, OVERSAMPLE_TEMP << 5 | OVERSAMPLE_PRES << 2 | MODE)
 
