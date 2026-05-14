@@ -33,6 +33,15 @@ def read_id(addr: int = DEVICE_ADDRESS) -> tuple[int, int]:
     return chip_id, chip_version
 
 
+def _wait_nvm_copy(bus: smbus2.SMBus, addr: int) -> None:
+    """Poll status register until NVM copy is complete after soft reset."""
+    for _ in range(5):
+        if not (bus.read_byte_data(addr, 0xF3) & 0x01):
+            return
+        time.sleep(0.002)
+    raise OSError("BME280 NVM copy did not complete after soft reset")
+
+
 def read_all(addr: int = DEVICE_ADDRESS) -> tuple[float, float, float]:
     OVERSAMPLE_TEMP = 2
     OVERSAMPLE_PRES = 2
@@ -40,6 +49,11 @@ def read_all(addr: int = DEVICE_ADDRESS) -> tuple[float, float, float]:
     MODE = 1
 
     with smbus2.SMBus(I2C_BUS) as bus:
+        # Soft reset to ensure the sensor starts from a known state
+        bus.write_byte_data(addr, 0xE0, 0xB6)
+        time.sleep(0.002)  # 2ms startup delay (datasheet section 4.2)
+        _wait_nvm_copy(bus, addr)
+
         bus.write_byte_data(addr, 0xF2, OVERSAMPLE_HUM)
         bus.write_byte_data(addr, 0xF4, OVERSAMPLE_TEMP << 5 | OVERSAMPLE_PRES << 2 | MODE)
 
