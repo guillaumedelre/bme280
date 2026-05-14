@@ -3,3 +3,5 @@ __pycache__/
 *.pyo
 .env
 .pytest_cache/
+AUDIT.md
+CLAUDE.md
