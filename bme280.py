@@ -124,7 +124,9 @@ def sensor(addr: int = DEVICE_ADDRESS) -> dict:
         'capabilities': {
             'temperature': {'unit_of_measurement': '°C', 'min': -40, 'max': 85, 'resolution': 0.01, 'accuracy': 1},
             'humidity': {'unit_of_measurement': '%RH', 'min': 0, 'max': 100, 'resolution': 0.008, 'accuracy': 3},
-            'pressure': {'unit_of_measurement': 'hPa', 'min': 300, 'max': 1100, 'resolution': 0.008, 'accuracy': 0.0018},
+            'pressure': {
+                'unit_of_measurement': 'hPa', 'min': 300, 'max': 1100, 'resolution': 0.008, 'accuracy': 0.0018,
+            },
         },
         'data': {
             'temperature': temperature,
