@@ -5,6 +5,7 @@ import pytest
 
 def make_mock_bus(chip_id: int = 96, chip_version: int = 0) -> MagicMock:
     bus = MagicMock()
+    bus.read_byte_data.return_value = 0  # 0xF3 status: NVM copy done, not measuring
     bus.read_i2c_block_data.side_effect = [
         [chip_id, chip_version],   # read_id
         [0] * 24,                  # cal1 - T and P calibration
@@ -107,3 +108,15 @@ def test_pressure_zero_when_p1_calibration_is_zero(patched_smbus):
     import bme280
     result = bme280.sensor()
     assert result['data']['pressure'] == 0.0
+
+
+def test_nvm_copy_timeout_raises_oserror():
+    bus = MagicMock()
+    bus.read_byte_data.return_value = 0x01  # NVM copy never completes
+    with patch('bme280.smbus2.SMBus') as MockSMBus:
+        instance = MockSMBus.return_value
+        instance.__enter__ = MagicMock(return_value=bus)
+        instance.__exit__ = MagicMock(return_value=False)
+        import bme280
+        with pytest.raises(OSError, match="NVM copy"):
+            bme280.read_all()
