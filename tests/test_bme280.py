@@ -3,15 +3,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-def make_mock_bus(chip_id: int = 96, chip_version: int = 0) -> MagicMock:
+def make_mock_bus(chip_id: int = 96) -> MagicMock:
     bus = MagicMock()
-    bus.read_byte_data.return_value = 0  # 0xF3 status: NVM copy done, not measuring
+    bus.read_byte_data.side_effect = [chip_id, 0, 0]  # read_id, NVM done, not measuring
     bus.read_i2c_block_data.side_effect = [
-        [chip_id, chip_version],   # read_id
-        [0] * 24,                  # cal1 - T and P calibration
-        [0],                       # cal2 - H1
-        [0] * 7,                   # cal3 - H2-H6
-        [0] * 8,                   # raw sensor data
+        [0] * 24,   # cal1 - T and P calibration
+        [0],        # cal2 - H1
+        [0] * 7,    # cal3 - H2-H6
+        [0] * 8,    # raw sensor data
     ]
     return bus
 
@@ -64,11 +63,11 @@ def test_read_id_returns_chip_id_and_version(patched_smbus):
     import bme280
     chip_id, chip_version = bme280.read_id()
     assert chip_id == 96
-    assert chip_version == 0
+    assert chip_version == 0  # always 0 — register 0xD1 is undocumented
 
 
-def test_read_id_custom_chip_id():
-    bus = make_mock_bus(chip_id=96, chip_version=0)
+def test_read_id_uses_single_byte_read():
+    bus = make_mock_bus(chip_id=96)
     with patch('bme280.smbus2.SMBus') as MockSMBus:
         instance = MockSMBus.return_value
         instance.__enter__ = MagicMock(return_value=bus)
@@ -76,6 +75,7 @@ def test_read_id_custom_chip_id():
         import bme280
         chip_id, _ = bme280.read_id()
         assert chip_id == 96
+        bus.read_byte_data.assert_called_with(bme280.DEVICE_ADDRESS, 0xD0)
 
 
 # --- sensor() structure ---
@@ -112,7 +112,7 @@ def test_pressure_zero_when_p1_calibration_is_zero(patched_smbus):
 
 def test_nvm_copy_timeout_raises_oserror():
     bus = MagicMock()
-    bus.read_byte_data.return_value = 0x01  # NVM copy never completes
+    bus.read_byte_data.side_effect = [0x01] * 10  # NVM copy never completes
     with patch('bme280.smbus2.SMBus') as MockSMBus:
         instance = MockSMBus.return_value
         instance.__enter__ = MagicMock(return_value=bus)
