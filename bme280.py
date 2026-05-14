@@ -32,8 +32,8 @@ def _get_uchar(data: list[int], index: int) -> int:
 
 def read_id(addr: int = DEVICE_ADDRESS) -> tuple[int, int]:
     with smbus2.SMBus(I2C_BUS) as bus:
-        chip_id, chip_version = bus.read_i2c_block_data(addr, 0xD0, 2)
-    return chip_id, chip_version
+        chip_id = bus.read_byte_data(addr, 0xD0)
+    return chip_id, 0
 
 
 def _wait_nvm_copy(bus: smbus2.SMBus, addr: int) -> None:
