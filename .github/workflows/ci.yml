@@ -7,6 +7,26 @@ on:
     branches: [develop, master]
 
 jobs:
+  lint:
+    name: Lint & type check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install lint dependencies
+        run: pip install flake8 mypy --quiet
+
+      - name: flake8
+        run: flake8 bme280.py sensor_api.py --max-line-length=120
+
+      - name: mypy
+        run: mypy bme280.py sensor_api.py --ignore-missing-imports
+
   test:
     name: Build & test
     runs-on: ubuntu-latest
