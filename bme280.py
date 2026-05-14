@@ -61,9 +61,15 @@ def read_all(addr: int = DEVICE_ADDRESS) -> tuple[float, float, float]:
         cal2 = bus.read_i2c_block_data(addr, 0xA1, 1)
         cal3 = bus.read_i2c_block_data(addr, 0xE1, 7)
 
-        # Datasheet Appendix B: measurement time formula
+        # Datasheet Appendix B: minimum wait before first status check
         wait_ms = 1.25 + (2.3 * OVERSAMPLE_TEMP) + ((2.3 * OVERSAMPLE_PRES) + 0.575) + ((2.3 * OVERSAMPLE_HUM) + 0.575)
         time.sleep(wait_ms / 1000)
+
+        # Poll measuring bit (0xF3 bit 3) until measurement is complete
+        for _ in range(20):
+            if not (bus.read_byte_data(addr, 0xF3) & 0x08):
+                break
+            time.sleep(0.001)
 
         data = bus.read_i2c_block_data(addr, 0xF7, 8)
 

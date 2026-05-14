@@ -120,3 +120,22 @@ def test_nvm_copy_timeout_raises_oserror():
         import bme280
         with pytest.raises(OSError, match="NVM copy"):
             bme280.read_all()
+
+
+def test_read_all_polls_measuring_bit():
+    bus = MagicMock()
+    # First call: NVM done (bit 0 = 0), then measuring active (bit 3 = 1), then done (0)
+    bus.read_byte_data.side_effect = [0x00, 0x08, 0x00]
+    bus.read_i2c_block_data.side_effect = [
+        [0] * 24,
+        [0],
+        [0] * 7,
+        [0] * 8,
+    ]
+    with patch('bme280.smbus2.SMBus') as MockSMBus:
+        instance = MockSMBus.return_value
+        instance.__enter__ = MagicMock(return_value=bus)
+        instance.__exit__ = MagicMock(return_value=False)
+        import bme280
+        temperature, pressure, humidity = bme280.read_all()
+    assert bus.read_byte_data.call_count == 3
