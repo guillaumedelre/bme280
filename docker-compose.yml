@@ -1,0 +1,17 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+
+  app:
+    build:
+      context: .
+      target: app
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    # Uncomment on Raspberry Pi to pass through the I2C bus
+    # devices:
+    #   - /dev/i2c-1:/dev/i2c-1
